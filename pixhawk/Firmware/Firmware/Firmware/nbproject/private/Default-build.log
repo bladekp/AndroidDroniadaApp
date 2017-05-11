@@ -1,0 +1,3 @@
+gmake: /usr/bin/cmake: Polecenie nie znalezione
+Makefile:6408: polecenia dla obiektu 'cmake_check_build_system' nie powiodły się
+gmake: *** [cmake_check_build_system] Błąd 127

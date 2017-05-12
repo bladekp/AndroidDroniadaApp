@@ -1,8 +1,10 @@
-package rtandroid.main;
+package rtandroid.main.receiver;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+
+import rtandroid.main.MainActivity;
 
 /**
  * Starts application main activity on android bootup.

@@ -4,7 +4,7 @@ import android.app.Application;
 
 import com.kontakt.sdk.android.common.KontaktSDK;
 
-public class App extends Application {
+public class KontaktIOInitialize extends Application {
 
   private static final String API_KEY = "jglYfDYKAzaOeXoxsGznuHDZkQmyEKxS";
 

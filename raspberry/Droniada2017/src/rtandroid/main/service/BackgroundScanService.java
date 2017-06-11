@@ -42,7 +42,12 @@ public class BackgroundScanService extends Service {
 
     @Override
     public void onCreate() {
-        this.onDestroy();
+        //this.onDestroy();
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         super.onCreate();
         setupProximityManager();
         SerialInterface.initialize();
@@ -51,6 +56,7 @@ public class BackgroundScanService extends Service {
 
     @Override
     public void onDestroy() {
+        stopScanning();
         handler.removeCallbacksAndMessages(null);
         if (proximityManager != null) {
             proximityManager.disconnect();
@@ -63,12 +69,6 @@ public class BackgroundScanService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        //stopScanning();
-       /* try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }*/
         startScanning();
         Log.i(TAG, "onStartCommand");
         return START_STICKY;
@@ -82,23 +82,43 @@ public class BackgroundScanService extends Service {
                 .scanPeriod(ScanPeriod.RANGING)
                 //Using BALANCED for best performance/battery ratio
                 .scanMode(ScanMode.LOW_LATENCY)
-                //OnDeviceUpdate callback will be received with 5 seconds interval
-                .deviceUpdateCallbackInterval(TimeUnit.MILLISECONDS.toMillis(300));
+                //OnDeviceUpdate callback will be received with interval
+                .deviceUpdateCallbackInterval(TimeUnit.MILLISECONDS.toMillis(500));
         //Setting up iBeacon and Eddystone listeners
         proximityManager.setIBeaconListener(createIBeaconListener());
+    }
+
+
+    private void startScanning() {
+        //Connect to scanning service and start scanning when ready
+        proximityManager.connect(new OnServiceReadyListener() {
+            @Override
+            public void onServiceReady() {
+                proximityManager.startScanning();
+                Log.i(TAG, "Scanning started");
+            }
+        });
+    }
+
+    private void stopScanning() {
+        //Stop scanning if scanning is in progress
+        if (proximityManager != null && proximityManager.isScanning()) {
+            proximityManager.stopScanning();
+            Log.i(TAG, "Scanning stopped");
+        }
     }
 
     private IBeaconListener createIBeaconListener() {
         return new IBeaconListener() {
             @Override
             public void onIBeaconDiscovered(IBeaconDevice iBeacon, IBeaconRegion region) {
-                serialSend(iBeacon);
+                if(iBeacon.getProximityUUID().toString().equals("3a49d7d0-d7cf-4946-8f3f-bd6e74219b5d")) serialSend(iBeacon);
             }
 
             @Override
             public void onIBeaconsUpdated(List<IBeaconDevice> iBeacons, IBeaconRegion region) {
                 for (IBeaconDevice beacon : iBeacons) {
-                    serialSend(beacon);
+                    if(beacon.getProximityUUID().toString().equals("3a49d7d0-d7cf-4946-8f3f-bd6e74219b5d")) serialSend(beacon);
                 }
             }
 
@@ -111,28 +131,29 @@ public class BackgroundScanService extends Service {
 
     private void serialSend(IBeaconDevice beacon) {
         showOnScreen(beacon); //temporary
-        Log.i(TAG, "Sending: " + beacon);
-        byte[] bufferMajor = ByteBuffer.allocate(4).putInt(beacon.getMajor()).array();
-        byte[] bufferMinor = ByteBuffer.allocate(4).putInt(beacon.getMinor()).array();
-        byte[] bufferRSSI = ByteBuffer.allocate(4).putInt(beacon.getRssi()).array();
+        //Log.i(TAG, "Sending: " + beacon);
+
+        byte[] bufferMajor = ByteBuffer.allocate(1).put((byte) beacon.getMajor()).array();
+        byte[] bufferMinor = ByteBuffer.allocate(1).put((byte)beacon.getMinor()).array();
+        byte[] bufferRSSI = ByteBuffer.allocate(1).put((byte)Math.abs(beacon.getRssi())).array();
         byte[] buffer = new byte[bufferMajor.length + bufferMinor.length + bufferRSSI.length];
 
         System.arraycopy(bufferMajor, 0, buffer, 0, bufferMajor.length);
         System.arraycopy(bufferMinor, 0, buffer, bufferMajor.length, bufferMinor.length);
         System.arraycopy(bufferRSSI, 0, buffer, bufferMajor.length + bufferMinor.length, bufferRSSI.length);
 
-        CRC32 crc = new CRC32();
+        //TODO crc
+        /*CRC32 crc = new CRC32();
         crc.update(buffer);
         long hash = crc.getValue();
-        byte[] bufferCRC = ByteBuffer.allocate(8).putLong(hash).array();
-        byte[] outputBuffer = new byte[buffer.length + bufferCRC.length];
+        byte[] bufferCRC = ByteBuffer.allocate(8).putLong(hash).array();*/
+        byte[] outputBuffer = new byte[2 + buffer.length ];//+ bufferCRC.length];
 
-        System.arraycopy(buffer, 0, outputBuffer, 0, buffer.length);
-        System.arraycopy(bufferCRC, 0, outputBuffer, buffer.length, bufferCRC.length);
-
-        for (int i = 0; i < outputBuffer.length; i++) {
-            outputBuffer[i] = (byte) Math.abs(outputBuffer[i]);
-        }
+        //two bytes starting sequence
+        outputBuffer[0] = (byte)0x05;
+        outputBuffer[1] = (byte)0x05;
+        System.arraycopy(buffer, 0, outputBuffer, 2, buffer.length);
+        //System.arraycopy(bufferCRC, 0, outputBuffer, buffer.length + 2, bufferCRC.length);
 
         String str = new String(outputBuffer);
         SerialInterface.sendData(str);
@@ -170,30 +191,6 @@ public class BackgroundScanService extends Service {
                     }
                 }
             }
-        }
-    }
-
-    private void startScanning() {
-        //Connect to scanning service and start scanning when ready
-        proximityManager.connect(new OnServiceReadyListener() {
-            @Override
-            public void onServiceReady() {
-                //Check if proximity manager is already scanning
-                //if (proximityManager.isScanning()) {
-                //    Log.i(TAG, "Already scanning");
-                ////    return;
-               // }
-                proximityManager.startScanning();
-                Log.i(TAG, "Scanning started");
-            }
-        });
-    }
-
-    private void stopScanning() {
-        //Stop scanning if scanning is in progress
-        if (proximityManager != null && proximityManager.isScanning()) {
-            proximityManager.stopScanning();
-            Log.i(TAG, "Scanning stopped");
         }
     }
 

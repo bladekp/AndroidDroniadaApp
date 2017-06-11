@@ -19,7 +19,7 @@ import rtandroid.main.service.BackgroundScanService;
 /**
  * Main app activity, user interface not needed. Just background tasks.
  * <p>
- * Connect to UART from linux's screen: sudo screen /dev/ttyUSB0 9600
+ * Connect to UART from linux's screen: sudo screen /dev/ttyUSB0 57600
  * UART configuration:
  * GND: pin 6
  * TX: pin 8

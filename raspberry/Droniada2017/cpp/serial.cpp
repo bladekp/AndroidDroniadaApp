@@ -29,7 +29,8 @@ extern "C" void Java_rtandroid_main_serial_SerialDriver_open(JNIEnv* env, jobjec
         return;
     }
 
-    options.c_cflag = B9600 | CS8 | CREAD | CLOCAL;
+    options.c_cflag = B57600 | CS8 | CREAD | CLOCAL;
+    //options.c_cflag = B9600 | CS8 | CREAD | CLOCAL;
     options.c_iflag = 0;
     options.c_oflag = 0;
     options.c_lflag = 0;

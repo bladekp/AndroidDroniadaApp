@@ -31,20 +31,22 @@ import com.kontakt.sdk.android.common.profile.IBeaconRegion;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import rtandroid.main.rest.RestClient;
+
 public class BackgroundScanService extends Service implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
 
-    private long UPDATE_INTERVAL = 5000;
-    private long FASTEST_INTERVAL = 1000;
+    private long UPDATE_INTERVAL = 1000;
+    private long FASTEST_INTERVAL = 500;
     public static final String TAG = "BackgroundScanService";
     private final Handler handler = new Handler();
     private ProximityManager proximityManager;
     public static TableLayout tableLayout;
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
-    private LatLng latLng;
+    private Location location;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -155,8 +157,23 @@ public class BackgroundScanService extends Service implements
     private void serialSend(IBeaconDevice beacon) {
         showOnScreen(beacon); //temporary
         Log.i(TAG, "Sending: " + beacon);
-        if (latLng != null) {
-            Log.i(TAG, "current location: " + latLng.toString());
+        if (location != null) {
+
+            RestClient client = new RestClient("http://192.168.0.10:8000/map/saveBeaconData");
+            client.AddParam("Lat", location.getLatitude() + "");
+            client.AddParam("Lon", location.getLongitude() + "");
+            client.AddParam("Alt", location.getAltitude() + "");
+            client.AddParam("Rssi", Math.abs(beacon.getRssi()) + "");
+            client.AddParam("Major", beacon.getMajor() + "");
+            client.AddParam("Minor", beacon.getMinor() + "");
+            client.AddParam("Time", System.currentTimeMillis() + "");
+            client.AddParam("Drone", android.os.Build.MODEL + "");
+
+            try {
+                client.Execute(RestClient.RequestMethod.GET);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -203,7 +220,7 @@ public class BackgroundScanService extends Service implements
         if (mCurrentLocation != null) {
             // Print current location if not null
             Log.d("DEBUG", "current location: " + mCurrentLocation.toString());
-            latLng = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+            location = mCurrentLocation;
         }
         // Begin polling for new location updates.
         startLocationUpdates();
@@ -232,6 +249,20 @@ public class BackgroundScanService extends Service implements
 
     @Override
     public void onLocationChanged(Location location) {
-        latLng = new LatLng(location.getLatitude(), location.getLongitude());
+        this.location = location;
+        if (location != null){
+            RestClient client = new RestClient("http://192.168.0.10:8000/map/saveDroneData");
+            client.AddParam("Lat", location.getLatitude() + "");
+            client.AddParam("Lon", location.getLongitude() + "");
+            client.AddParam("Alt", location.getAltitude() + "");
+            client.AddParam("Time", System.currentTimeMillis() + "");
+            client.AddParam("Drone", android.os.Build.MODEL + "");
+
+            try {
+                client.Execute(RestClient.RequestMethod.GET);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

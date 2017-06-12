@@ -20,7 +20,8 @@ android {
     buildToolsVersion '25.0.2'
 
     defaultConfig {
-        minSdkVersion 20
+        minSdkVersion 19
+        multiDexEnabled true
     }
 
     sourceSets {
@@ -50,8 +51,9 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:appcompat-v7:25.0.1'
+    compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.kontaktio:sdk:3.3.0'
     compile 'org.apache.httpcomponents:httpclient:4.5'
-    compile 'com.google.android.gms:play-services:11.0.0'
+    compile 'com.google.android.gms:play-services-location:11.0.0'
+    compile 'com.android.support:multidex:1.0.1'
 }

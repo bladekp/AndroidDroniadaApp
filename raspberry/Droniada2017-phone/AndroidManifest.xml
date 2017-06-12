@@ -23,8 +23,6 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
 
-        <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-
         <activity
             android:name="rtandroid.main.MainActivity"
             android:label="@string/app_name">

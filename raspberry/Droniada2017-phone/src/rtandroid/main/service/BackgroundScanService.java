@@ -18,7 +18,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.model.LatLng;
 import com.kontakt.sdk.android.ble.configuration.ScanMode;
 import com.kontakt.sdk.android.ble.configuration.ScanPeriod;
 import com.kontakt.sdk.android.ble.connection.OnServiceReadyListener;
@@ -106,7 +105,7 @@ public class BackgroundScanService extends Service implements
                 //Using BALANCED for best performance/battery ratio
                 .scanMode(ScanMode.LOW_LATENCY)
                 //OnDeviceUpdate callback will be received with interval
-                .deviceUpdateCallbackInterval(TimeUnit.MILLISECONDS.toMillis(500));
+                .deviceUpdateCallbackInterval(TimeUnit.MILLISECONDS.toMillis(1000));
         //Setting up iBeacon and Eddystone listeners
         proximityManager.setIBeaconListener(createIBeaconListener());
     }
@@ -159,7 +158,7 @@ public class BackgroundScanService extends Service implements
         Log.i(TAG, "Sending: " + beacon);
         if (location != null) {
 
-            RestClient client = new RestClient("http://192.168.0.10:8000/map/saveBeaconData");
+            RestClient client = new RestClient("http://remote.jgwservices.com:8000/map/saveBeaconData");
             client.AddParam("Lat", location.getLatitude() + "");
             client.AddParam("Lon", location.getLongitude() + "");
             client.AddParam("Alt", location.getAltitude() + "");
@@ -251,7 +250,7 @@ public class BackgroundScanService extends Service implements
     public void onLocationChanged(Location location) {
         this.location = location;
         if (location != null){
-            RestClient client = new RestClient("http://192.168.0.10:8000/map/saveDroneData");
+            RestClient client = new RestClient("http://remote.jgwservices.com:8000/map/saveDroneData");
             client.AddParam("Lat", location.getLatitude() + "");
             client.AddParam("Lon", location.getLongitude() + "");
             client.AddParam("Alt", location.getAltitude() + "");

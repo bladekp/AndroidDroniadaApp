@@ -1,1 +1,0 @@
-cmd='/usr/share/cmake-3.8.1-Linux-x86_64/bin/cmake;-DCMAKE_INSTALL_PREFIX=/usr;-GUnix Makefiles;<SOURCE_DIR><SOURCE_SUBDIR>'
